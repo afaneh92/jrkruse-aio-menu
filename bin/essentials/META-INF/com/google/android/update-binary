@@ -1,0 +1,90 @@
+#!/sbin/sh
+#
+# Essentials
+# by afaneh92
+
+export OUTFD=$2
+ZIP=$3
+
+ui_print() {
+  echo -n -e "ui_print $1\n" > /proc/self/fd/$OUTFD
+  echo -n -e "ui_print\n" > /proc/self/fd/$OUTFD
+}
+
+mountsysven() {
+  ui_print "- Mounting system & vendor"
+  umount -f /system 2>/dev/null || mount -f /system_root 2>/dev/null
+  umount -f /vendor 2>/dev/null 
+  mount -w /system || mount -w /system_root
+  mount -w /vendor
+}
+
+umountsysven() {
+  ui_print "- Mounting system & vendor"
+  umount -f /system 2>/dev/null || mount -f /system_root 2>/dev/null
+  umount -f /vendor 2>/dev/null
+}
+
+extract() {
+  ui_print "- Extracting tools"
+  rm -rf /tmp/essentials
+  mkdir -p /tmp/essentials
+  unzip -q "$ZIP" -d /tmp/essentials
+  chmod 755 /tmp/essentials/bin/*
+  cp -f /tmp/essentials/bin/multidisabler /system/bin
+}
+
+patch() {
+  # Executed through bash for array handling
+  /tmp/essentials/bin/bash /tmp/essentials/bin/multidisabler
+}
+
+ui_print " "
+ui_print "***********************************"
+ui_print "- Essentials script by afaneh92"
+ui_print "***********************************"
+ui_print " "
+
+mountsysven
+extract
+patch
+
+if dd if=/dev/zero of=/vendor/test bs=1 count=1 2>/dev/null; then
+  ui_print " "
+  ui_print "***********************************"
+  ui_print "Checking vendor size again "
+  ui_print "Vendor has been resized successfully"
+  ui_print "***********************************"
+  ui_print " "
+  ui_print "***********************************"
+  ui_print "Phone will reboot back to recovery "
+  ui_print "Too finish the process..."
+  ui_print "***********************************"
+  ui_print " "
+  rm -f /vendor/test
+  rm -f /cache/recovery/openrecoveryscript
+  mv -f /cache/recovery/openrecoveryscript1 /cache/recovery/openrecoveryscript
+  sleep 10
+  reboot recovery
+  sleep 3
+  killall recovery
+else
+  ui_print " "
+  ui_print "***********************************"
+  ui_print "Vendor needs to be resized manually"
+  ui_print "When TWRP returns to main screen..."
+  ui_print "Open terminal and type multidisabler..."
+  ui_print "***********************************"
+  ui_print " "
+  ui_print "***********************************"
+  ui_print "When finished phone will reboot back to recovery "
+  ui_print "Too finish the process..."
+  ui_print "***********************************"
+  ui_print " "
+  rm -f /vendor/test
+  rm -f /cache/recovery/openrecoveryscript
+  mv -f /cache/recovery/openrecoveryscript1 /cache/recovery/openrecoveryscript
+  sleep 10
+  exit 1
+fi
+exit 0

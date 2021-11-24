@@ -1,0 +1,3 @@
+ro.config.tima=0
+net.tethering.noprovisioning=true 
+wlan.wfd.hdcp=disable

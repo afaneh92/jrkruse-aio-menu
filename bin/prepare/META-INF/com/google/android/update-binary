@@ -1,0 +1,216 @@
+#!/sbin/sh
+#
+# Prepare script by Jrkruse.
+#
+# Use this to prime your device after installing TWRP.
+
+DEBUG=true
+
+ZIPFILE=$3
+ZIPNAME=${ZIPFILE##*/}
+OUTFD=$2
+
+scr_wdth=50
+
+# Detect real $OUTFD
+#
+if readlink /proc/$$/fd/$OUTFD 2>/dev/null | grep /tmp >/dev/null; then
+  OUTFD=0
+  for FD in $( ls /proc/$$/fd ); do
+    if readlink /proc/$$/fd/$FD 2>/dev/null | grep pipe >/dev/null; then
+      if ps | grep " 3 $FD " | grep -v grep >/dev/null; then
+	OUTFD=$FD
+	break
+      fi
+    fi
+  done
+fi
+
+ui_print() {
+  echo -ne "ui_print $1\n" >> /proc/self/fd/$OUTFD
+  echo -ne "ui_print\n" >> /proc/self/fd/$OUTFD
+}
+
+debug_print() {
+  [ "$DEBUG" = true ] && ui_print "$*"
+}
+
+print_full_bar() {
+  ui_print "$(printf '%*s\n' $scr_wdth | tr ' ' '=')"
+}
+
+print_justified() {
+  local str="$1"
+  local str_len=${#str}
+  local padding_len=$(( ($scr_wdth - $str_len - 2) / 2))
+  local ljust="$(printf '%*s' $padding_len)"
+  local rjust="$(printf '%*s' $(($padding_len + $str_len % 2)))"
+
+  ui_print "=$ljust$str$rjust="
+}
+
+md5() {
+  md5sum -b "$1"
+}
+
+file_changed() {
+  local file="$1"
+  local old_md5="$2"
+  local new_md5=$( md5 "$file" )
+
+  if [ $new_md5 != $old_md5 ]; then
+    debug_print " -     ...modified."
+  else
+    debug_print " -     ...unchanged."
+  fi
+}
+
+disable_frp() {
+  local md5
+  local i
+  ui_print " - Disabling Factory Reset Protection (FRP)..."
+
+  for i in /vendor/build.prop; do
+    if [ -f $i ]; then
+      ui_print " -   Found $i."
+      md5=$( md5 $i )
+      # This comments out the offending line and adds an edited one.
+      if grep 'ro.frp.pst=' $i; then
+        sed -i -e 's/^\(ro.frp.pst=\).*/\1/' $i
+      else
+        echo 'ro.frp.pst=' >> $i
+      fi
+      file_changed $i $md5
+    fi
+  done
+}
+
+fix_props() {
+  ui_print " - Fixing Build Props..."
+  for prop in `cat /tmp/build`;do
+    export newprop=$(echo ${prop} | cut -d '=' -f1)
+    sed -i "/${newprop}/d" $ANDROID_ROOT/system/build.prop
+    echo $prop >> $ANDROID_ROOT/system/build.prop
+  done
+}
+
+sec_nvm_patch() {
+  dbp=$(getprop ro.board.platform)
+  ui_print " - Checking Device Platform: $dbp..."
+  if echo $dbp | grep -E 'kona' >/dev/null; then
+    if strings -ao /vendor/bin/sec_nvm | grep __cxa_atexit; then
+      ui_print " - sm8250 device found..."
+      ui_print " - Patching sec_nvm..."  
+      [ ! -f "/vendor/bin/sec_nvm.bak" ] && cp -f /vendor/bin/sec_nvm /vendor/bin/sec_nvm.bak
+      mv -f /tmp/sec_nvm /vendor/bin/
+      chcon u:object_r:vendor_sec_nvm_exec:s0 vendor/bin/sec_nvm
+      chown root:shell vendor/bin/sec_nvm
+      chmod 775 vendor/bin/sec_nvm
+    else
+       ui_print " - Found hex pattern in sec_nvm, skip patching!"
+    fi
+  else
+    ui_print " - Device is not sm8250..." 
+  fi
+}
+
+debloat() {
+  rm -f /data/system/locksettings.db
+  rm -f /data/system/locksettings.db-*
+  rm -f $ANDROID_ROOT/recovery-from-boot.bak
+  rm -f $ANDROID_ROOT/recovery-from-boot*
+  rm -f $ANDROID_ROOT/recovery-from-boot.*
+  rm -f $ANDROID_ROOT/recovery-from-boot.p
+  rm -f $ANDROID_ROOT/system/recovery-from-boot.bak
+  rm -f $ANDROID_ROOT/system/recovery-from-boot*
+  rm -f $ANDROID_ROOT/system/recovery-from-boot.*
+  rm -f $ANDROID_ROOT/system/recovery-from-boot.p
+  rm -rf $ANDROID_ROOT/system/app/AmazonMDIP_USA
+  rm -rf $ANDROID_ROOT/system/app/AmazonShopping_USA
+  rm -rf $ANDROID_ROOT/system/app/AmazonVideo_SPR_stub
+  rm -rf $ANDROID_ROOT/system/app/KidsHome_Installer
+  rm -rf $ANDROID_ROOT/system/app/MnoDmClient
+  rm -rf $ANDROID_ROOT/system/app/MnoDmViewer
+  rm -rf $ANDROID_ROOT/system/app/FBAppManager_NS
+  rm -rf $ANDROID_ROOT/system/app/FBInstaller_NS
+  rm -rf $ANDROID_ROOT/system/app/OneDrive_Samsung_v3
+  rm -rf $ANDROID_ROOT/system/app/PowerPoint_SamsungStub
+  rm -rf $ANDROID_ROOT/system/app/CarmodeStub
+  rm -rf $ANDROID_ROOT/system/app/EasymodeContactsWidget81
+  rm -rf $ANDROID_ROOT/system/app/EasySetup
+  rm -rf $ANDROID_ROOT/system/app/Excel_SamsungStub
+  rm -rf $ANDROID_ROOT/system/app/Facebook_stub
+  rm -rf $ANDROID_ROOT/system/app/LinkedIn_SamsungStub
+  rm -rf $ANDROID_ROOT/system/app/Word_SamsungStub
+  rm -rf $ANDROID_ROOT/system/priv-app/FBAppManager_NS
+  rm -rf $ANDROID_ROOT/system/priv-app/FotaAgent
+  rm -rf $ANDROID_ROOT/system/priv-app/SOAgent*
+  rm -rf $ANDROID_ROOT/system/priv-app/wssyncmldm
+  rm -rf $ANDROID_ROOT/system/priv-app/FBInstaller_NS
+  rm -rf $ANDROID_ROOT/system/priv-app/OneDrive_Samsung_v3
+  rm -rf $ANDROID_ROOT/system/priv-app/PowerPoint_SamsungStub
+  rm -rf $ANDROID_ROOT/system/priv-app/CarmodeStub
+  rm -rf $ANDROID_ROOT/system/priv-app/EasymodeContactsWidget81
+  rm -rf $ANDROID_ROOT/system/priv-app/EasySetup
+  rm -rf $ANDROID_ROOT/system/priv-app/Excel_SamsungStub
+  rm -rf $ANDROID_ROOT/system/priv-app/Facebook_stub
+  rm -rf $ANDROID_ROOT/system/priv-app/FlipboardBriefing
+  rm -rf $ANDROID_ROOT/system/priv-app/LinkedIn_SamsungStub
+  rm -rf $ANDROID_ROOT/system/priv-app/Word_SamsungStub
+  rm -rf $ANDROID_ROOT/system/priv-app/HancomOfficeEditor_Hidden_Install
+  rm -rf $ANDROID_ROOT/system/priv-app/VzCloud
+  rm -rf $ANDROID_ROOT/system/priv-app/VzCloud
+  rm -rf $ANDROID_ROOT/system/carrier/ATT/priv-app/canid_stub	
+  rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/canid_stub
+  rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/IgniteVerizon
+  rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/LocationAgent
+  rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/MyVerizonMobile
+  rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/OneTalkDialer
+  rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/SNP_stub	
+  rm -rf $ANDROID_ROOT/system/carrier/USC/priv-app/Ignite-uscc
+}
+
+ui_print " "
+print_full_bar
+print_justified "Prepare script for Samsung devices"
+print_justified "by Jrkruse"
+print_full_bar
+ui_print " "
+
+ui_print " - Mounting $ANDROID_ROOT..."
+mount $ANDROID_ROOT 2>/dev/null
+mount -o remount,rw $ANDROID_ROOT 2>/dev/null
+
+if ! mount | grep $ANDROID_ROOT >/dev/null; then
+  ANDROID_ROOT=/system_root
+  ui_print " -   Attempt failed. Mounting at $ANDROID_ROOT..."
+  mount -o rw $ANDROID_ROOT
+  if ! mount | grep $ANDROID_ROOT >/dev/null; then
+    ui_print " -   Even that attempt failed. Aborting..."
+    exit 2
+  fi
+fi
+
+ui_print " - Mounting /vendor..."
+mount /vendor
+mount -o remount,rw /vendor
+
+if ! mount | grep /vendor >/dev/null; then
+  ui_print " -   Mount failed. Aborting..."
+  exit 3
+fi
+
+unzip -q "$ZIPFILE" -d /tmp
+disable_frp
+fix_props
+sec_nvm_patch
+debloat
+
+ui_print " - Unmounting /vendor..."
+umount /vendor
+ui_print " - Unmounting $ANDROID_ROOT..."
+umount $ANDROID_ROOT
+
+ui_print " "
+ui_print " - Finished."
+ui_print " "

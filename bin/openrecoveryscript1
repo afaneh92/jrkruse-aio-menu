@@ -1,0 +1,5 @@
+install /cache/recovery/prepare.zip
+install /cache/recovery/magisk.zip
+install /cache/recovery/bluetooth.zip
+install /cache/recovery/safetynet.zip
+wipe /cache

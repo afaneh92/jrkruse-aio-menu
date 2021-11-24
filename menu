@@ -1,0 +1,197 @@
+#!/bin/bash
+# By Mohammad Afaneh, afaneh92 @ XDA Developers.
+#
+# JRKRUSE-AIO-BUILDER v0.4
+
+# Variables
+DIR=`readlink -f .`;
+
+# Color
+ON_BLUE=`echo -e "\033[44m"`	# On Blue
+RED=`echo -e "\033[1;31m"`	# Red
+BLUE=`echo -e "\033[1;34m"`	# Blue
+GREEN=`echo -e "\033[1;32m"`	# Green
+UNDER_LINE=`echo -e "\e[4m"`	# Text Under Line
+STD=`echo -e "\033[0m"`		# Text Clear
+ 
+# Functions
+pause(){
+  read -p "${RED}$2${STD}Press ${BLUE}[Enter]${STD} key to $1..." fackEnterKey
+}
+
+compress_to_zip(){
+  cd $DIR/bin/$1
+  zip -r9 $DIR/tmp/cache/recovery/$1.zip .
+  cd $DIR
+}
+
+setup_userdata(){
+  echo
+  echo "${GREEN} - Setup Userdata...${STD}"
+  if [[ -f bin/userdata.img ]]; then
+    echo "Copying userdata.img to tmp/userdata.img"
+    cp bin/userdata.img tmp/userdata.img
+  fi
+  pause 'continue'
+}
+
+setup_twrp(){
+  echo
+  echo "${GREEN} - Setup TWRP...${STD}"
+  findtwrp=($(ls twrp/*.img twrp/*.tar 2>/dev/null | head -1))
+  [[ ! -z "$findtwrp" ]] && x="$(basename -a $findtwrp)"
+  if [[ ! -f twrp/$x || -z $x ]]; then
+    [ -d "tmp" ] && rm -rf tmp
+    pause 'exit' 'twrp not found!, '
+    exit 1
+  fi
+  if [[ ${x##*.} = img ]]; then
+    echo "Copying $x to tmp/recovery.img"
+    cp twrp/$x tmp/recovery.img
+  elif [[ ${x##*.} = tar ]]; then
+    echo "Extracting twrp/$x to tmp/recovery.img"
+    tar -xf "twrp/$x" -C tmp
+  fi
+  pause 'continue'
+}
+
+setup_vbmeta(){
+  echo
+  echo "${GREEN} - Setup Vbmeta...${STD}"
+  if [[ -f custom_vbmeta/vbmeta.img ]]; then
+    echo "Copying custom_vbmeta/vbmeta.img to tmp/vbmeta.img"
+    cp custom_vbmeta/vbmeta.img tmp/vbmeta.img
+  elif [[ -f bin/vbmeta.img ]]; then
+    echo "Copying bin/vbmeta.img to tmp/vbmeta.img"
+    cp bin/vbmeta.img tmp/vbmeta.img
+  fi
+  pause 'continue'
+}
+
+setup_cache(){
+  echo
+  echo "${GREEN} - Setup Cache...${STD}"
+  chache_list="bluetooth.zip essentials.zip magisk.zip openrecoveryscript openrecoveryscript1 prepare.zip safetynet.zip"
+  [ ! -d "tmp/cache/recovery" ] && mkdir -p tmp/cache/recovery
+  for i in $chache_list; do
+    if [[ -f bin/$i ]]; then
+      echo "Copying bin/$i to tmp/cache/recovery/$i"
+      cp bin/$i tmp/cache/recovery/$i
+    elif [[ -d bin/${i%.*} ]]; then
+      echo "Compressing bin/${i%.*} to tmp/cache/recovery/$i";
+      compress_to_zip ${i%.*}
+    fi
+  done
+  mkdir -p tmp/cache/lost+found
+  pause 'continue'
+}
+
+setup_kernel(){
+  echo
+  echo "${GREEN} - Setup Kernel...${STD}"
+  if [[ -f kernel/kernel.zip ]]; then
+    echo "Copying kernel.zip to tmp/cache/recovery/kernel.zip"
+    cp kernel/kernel.zip tmp/cache/recovery/kernel.zip
+    sed -i '1 a install /cache/recovery/kernel.zip' tmp/cache/recovery/openrecoveryscript1
+  elif [[ -f kernel/boot.img ]]; then
+    echo "Copying boot.img to tmp/boot.img"
+    cp kernel/boot.img tmp/boot.img
+  else
+    echo "No kernel selected"
+  fi
+  pause 'continue'
+}
+
+compresslz4(){
+  echo
+  echo "${GREEN} - Start lz4 Compressing...${STD}"
+  for i in $@; do
+    if [[ -f $i ]]; then
+      echo " - Found $i."
+      if `lz4 -B6 --content-size $i $i.lz4`; then
+        echo "${GREEN} - Compressing $i to $i.lz4 ${STD}";
+        rm -rf $i
+      else
+        echo "${RED} - Not compressed $i ${STD}";
+      fi
+    fi
+  done
+  pause 'continue'
+}
+
+build(){
+  echo
+  echo "${GREEN}***** Start making AIO... *****${STD}"
+  [ -d "tmp" ] && rm -rf tmp
+  [ ! -d "tmp" ] && mkdir tmp
+  setup_userdata
+  setup_twrp
+  setup_cache
+  setup_kernel
+  ./bin/make_ext4fs -s -l 256M -a tmp/cache tmp/cache.img tmp/cache/
+  rm -rf tmp/cache
+  echo
+  read -p "Vbmeta disabled included by default ${BLUE}[Press Enter]${STD}, skip it ${RED}[y,Y]${STD}?" include
+  [[ $include = y || $include = Y ]] || setup_vbmeta
+  [ ! -d "out" ] && mkdir out
+  echo
+  [ $@ = ext4 ] && read -p "Make userdata.img.ext4? ${BLUE}[y,n]${STD} " userdataext4
+  [[ $@ = ext4 && $userdataext4 = y ]] && mv tmp/userdata.img tmp/userdata.img.ext4;
+  [ $@ = ext4 ] && mv tmp/cache.img tmp/cache.img.ext4;
+  findimg=`ls tmp/*.img tmp/*.img.ext4 2>/dev/null`
+  compresslz4 $findimg
+  echo
+  read -p "Enter device model: " device_name
+  tar_name="USERDATA_AIO_${device_name}_FORCE_WIPE_`date '+%Y_%m_%d'`.tar.md5"
+  echo "Compressing tmp/* to out/${tar_name}"
+  cd tmp && tar -H ustar -c `ls *.img *.img.ext4 *.img.lz4 *.img.ext4.lz4 2>/dev/null` > ../out/${tar_name%.*} && cd ..
+  echo "Generate md5 hash"
+  cd out && md5sum -t ${tar_name%.*} >> ${tar_name%.*} && mv ${tar_name%.*} ${tar_name} && cd ..
+  echo "${GREEN}***** Successfully made ${tar_name} *****${STD}";
+  pause 'continue'
+  [ -d "tmp" ] && rm -rf tmp
+}
+
+clean(){
+  echo "${GREEN}***** Cleaning in Progress *****${STD}";
+  [ -d "tmp" ] && rm -rf tmp
+  [ -d "out" ] && rm -rf out
+  rm -rf twrp/*
+  rm -rf kernel/*
+  rm -rf custom_vbmeta/*
+  echo "${GREEN}***** Cleaning Done *****${STD}";
+  pause 'continue'
+}
+
+# Show menu
+show_menus(){
+  clear
+  echo "${ON_BLUE} J R K R U S E - A I O - B U I L D E R ${STD}"
+  echo "1. Build ${UNDER_LINE}i${STD}mg"
+  echo "2. Build ${UNDER_LINE}e${STD}xt4"
+  echo "3. ${UNDER_LINE}C${STD}lean"
+  echo "4. E${UNDER_LINE}x${STD}it"
+}
+
+# Read input
+read_options(){
+  local choice=""
+  read -p "Enter choice [1-4]:" choice
+  case $choice in
+    "1"|"i"|"I") build img;;
+    "2"|"e"|"E") build ext4;;
+    "3"|"c"|"C") clean;;
+    "4"|"x"|"X") exit;;
+    *) pause 'return to Main menu' 'Invalid option, '
+  esac
+}
+
+# Trap CTRL+C, CTRL+Z and quit singles
+trap '' SIGINT SIGQUIT SIGTSTP
+ 
+# Step # Main logic - infinite loop
+while true
+do
+  show_menus
+  read_options
+done
