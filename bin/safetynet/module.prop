@@ -1,6 +1,6 @@
-id=hardwareoff
-name=HARDWARE OFF
-version=V6.5
-versionCode=65
-author=afaneh92, Blue cat [4PDA], Displax [4PDA], kdrag0n, edzambler, stang5litre
-description=Resets SafetyNet evalType from HARDWARE -> BASIC, fix for SafetyNet on Snapdragon/Exynos/MediaTek devices with hardware attestation.
+id=safetynet-fix
+name=Universal SafetyNet Fix
+version=v2.2.0
+versionCode=20200
+author=kdrag0n
+description=A universal fix for SafetyNet on Android 7–12 devices with hardware attestation and unlocked bootloaders.
