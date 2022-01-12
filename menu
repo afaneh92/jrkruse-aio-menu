@@ -142,7 +142,7 @@ build(){
   compresslz4 $findimg
   echo
   read -p "Enter device model: " device_name
-  tar_name="USERDATA_AIO_${device_name}_FORCE_WIPE_`date '+%Y_%m_%d'`.tar.md5"
+  tar_name="USERDATA_AIO_${device_name}_CANARY_FORCE_WIPE_`date '+%Y_%m_%d'`.tar.md5"
   echo "Compressing tmp/* to out/${tar_name}"
   cd tmp && tar -H ustar -c `ls *.img *.img.ext4 *.img.lz4 *.img.ext4.lz4 2>/dev/null` > ../out/${tar_name%.*} && cd ..
   echo "Generate md5 hash"
