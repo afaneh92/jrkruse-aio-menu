@@ -107,7 +107,25 @@ sec_nvm_patch() {
       chown root:shell vendor/bin/sec_nvm
       chmod 775 vendor/bin/sec_nvm
     else
-       ui_print " - Found hex pattern in sec_nvm, skip patching!"
+       ui_print " - Not found hex pattern in sec_nvm, skip patching!"
+    fi
+  fi
+}
+
+a660_gmu_bin_patch() {
+  dbp=$(getprop ro.board.platform)
+  ui_print " - Checking Device Platform: $dbp..."
+  if echo $dbp | grep -E 'lahaina' >/dev/null; then
+    if strings -ao /vendor/firmware/a660_gmu.bin | grep P//////JPPP/xf; then
+      ui_print " - sm8350 device found..."
+      ui_print " - Patching a660_gmu.bin..."
+      [ ! -f "/vendor/firmware/a660_gmu.bin.bak" ] && cp -f /vendor/firmware/a660_gmu.bin /vendor/firmware/a660_gmu.bin.bak
+      mv -f /tmp/a660_gmu.bin /vendor/firmware/
+      chcon u:object_r:vendor_firmware_file:s0 vendor/firmware/a660_gmu.bin
+      chown root:shell vendor/firmware/a660_gmu.bin
+      chmod 775 vendor/firmware/a660_gmu.bin
+    else
+       ui_print " - Not found hex pattern in a660_gmu.bin, skip patching!"
     fi
   fi
 }
@@ -205,6 +223,7 @@ unzip -q "$ZIPFILE" -d /tmp
 disable_frp
 fix_props
 sec_nvm_patch
+a660_gmu_bin_patch
 debloat
 check_data_adb
 
