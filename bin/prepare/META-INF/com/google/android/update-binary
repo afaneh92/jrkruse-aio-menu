@@ -186,6 +186,7 @@ check_data_adb() {
     # Test if data is writable
     touch /data/.rw && rm /data/.rw && DATA=true
     $DATA && [ -d /data/adb ] || mkdir /data/adb
+    mv /tmp/yasnac $ANDROID_ROOT/system/preload
   fi
 }
 
