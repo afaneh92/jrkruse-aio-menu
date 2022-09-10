@@ -1,22 +1,23 @@
 #!/bin/bash
 # By Mohammad Afaneh, afaneh92 @ XDA Developers.
 #
-# JRKRUSE-AIO-BUILDER v0.5
+# JRKRUSE-AIO-BUILDER
 
 # Variables
+menu_version="v0.6"
 DIR=`readlink -f .`;
 
 # Color
 ON_BLUE=`echo -e "\033[44m"`	# On Blue
-RED=`echo -e "\033[1;31m"`	# Red
-BLUE=`echo -e "\033[1;34m"`	# Blue
-GREEN=`echo -e "\033[1;32m"`	# Green
+BRED=`echo -e "\033[1;31m"`	# Bold Red
+BBLUE=`echo -e "\033[1;34m"`	# Bold Blue
+BGREEN=`echo -e "\033[1;32m"`	# Bold Green
 UNDER_LINE=`echo -e "\e[4m"`	# Text Under Line
 STD=`echo -e "\033[0m"`		# Text Clear
  
 # Functions
 pause(){
-  read -p "${RED}$2${STD}Press ${BLUE}[Enter]${STD} key to $1..." fackEnterKey
+  read -p "${BRED}$2${STD}Press ${BBLUE}[Enter]${STD} key to $1..." fackEnterKey
 }
 
 compress_to_zip(){
@@ -27,7 +28,7 @@ compress_to_zip(){
 
 setup_userdata(){
   echo
-  echo "${GREEN} - Setup Userdata...${STD}"
+  echo "${BGREEN} - Setup Userdata...${STD}"
   if [[ -f bin/userdata.img ]]; then
     echo "Copying userdata.img to tmp/userdata.img"
     cp bin/userdata.img tmp/userdata.img
@@ -37,7 +38,7 @@ setup_userdata(){
 
 setup_twrp(){
   echo
-  echo "${GREEN} - Setup TWRP...${STD}"
+  echo "${BGREEN} - Setup TWRP...${STD}"
   findtwrp=($(ls twrp/*.img twrp/*.tar 2>/dev/null | head -1))
   [[ ! -z "$findtwrp" ]] && x="$(basename -a $findtwrp)"
   if [[ ! -f twrp/$x || -z $x ]]; then
@@ -57,7 +58,7 @@ setup_twrp(){
 
 setup_vbmeta(){
   echo
-  echo "${GREEN} - Setup Vbmeta...${STD}"
+  echo "${BGREEN} - Setup Vbmeta...${STD}"
   if [[ -f custom_vbmeta/vbmeta.img ]]; then
     echo "Copying custom_vbmeta/vbmeta.img to tmp/vbmeta.img"
     cp custom_vbmeta/vbmeta.img tmp/vbmeta.img
@@ -70,7 +71,7 @@ setup_vbmeta(){
 
 setup_cache(){
   echo
-  echo "${GREEN} - Setup Cache...${STD}"
+  echo "${BGREEN} - Setup Cache...${STD}"
   chache_list="bluetooth.zip essentials.zip magisk.zip openrecoveryscript openrecoveryscript1 prepare.zip safetynet.zip"
   [ ! -d "tmp/cache/recovery" ] && mkdir -p tmp/cache/recovery
   for i in $chache_list; do
@@ -88,7 +89,7 @@ setup_cache(){
 
 setup_kernel(){
   echo
-  echo "${GREEN} - Setup Kernel...${STD}"
+  echo "${BGREEN} - Setup Kernel...${STD}"
   if [[ -f kernel/kernel.zip ]]; then
     echo "Copying kernel.zip to tmp/cache/recovery/kernel.zip"
     cp kernel/kernel.zip tmp/cache/recovery/kernel.zip
@@ -104,15 +105,15 @@ setup_kernel(){
 
 compresslz4(){
   echo
-  echo "${GREEN} - Start lz4 Compressing...${STD}"
+  echo "${BGREEN} - Start lz4 Compressing...${STD}"
   for i in $@; do
     if [[ -f $i ]]; then
       echo " - Found $i."
       if `lz4 -B6 --content-size $i $i.lz4`; then
-        echo "${GREEN} - Compressing $i to $i.lz4 ${STD}";
+        echo "${BGREEN} - Compressing $i to $i.lz4 ${STD}";
         rm -rf $i
       else
-        echo "${RED} - Not compressed $i ${STD}";
+        echo "${BRED} - Not compressed $i ${STD}";
       fi
     fi
   done
@@ -121,7 +122,7 @@ compresslz4(){
 
 build(){
   echo
-  echo "${GREEN}***** Start making AIO... *****${STD}"
+  echo "${BGREEN}***** Start making AIO... *****${STD}"
   [ -d "tmp" ] && rm -rf tmp
   [ ! -d "tmp" ] && mkdir tmp
   setup_userdata
@@ -131,11 +132,11 @@ build(){
   ./bin/make_ext4fs -s -l 256M -a tmp/cache tmp/cache.img tmp/cache/
   rm -rf tmp/cache
   echo
-  read -p "Vbmeta disabled included by default ${BLUE}[Press Enter]${STD}, skip it ${RED}[y,Y]${STD}?" include
+  read -p "Vbmeta disabled included by default ${BBLUE}[Press Enter]${STD}, skip it ${BRED}[y,Y]${STD}?" include
   [[ $include = y || $include = Y ]] || setup_vbmeta
   [ ! -d "out" ] && mkdir out
   echo
-  [ $@ = ext4 ] && read -p "Make userdata.img.ext4? ${BLUE}[y,n]${STD} " userdataext4
+  [ $@ = ext4 ] && read -p "Make userdata.img.ext4? ${BBLUE}[y,n]${STD} " userdataext4
   [[ $@ = ext4 && $userdataext4 = y ]] && mv tmp/userdata.img tmp/userdata.img.ext4;
   [ $@ = ext4 ] && mv tmp/cache.img tmp/cache.img.ext4;
   findimg=`ls tmp/*.img tmp/*.img.ext4 2>/dev/null`
@@ -147,26 +148,26 @@ build(){
   cd tmp && tar -H ustar -c `ls *.img *.img.ext4 *.img.lz4 *.img.ext4.lz4 2>/dev/null` > ../out/${tar_name%.*} && cd ..
   echo "Generate md5 hash"
   cd out && md5sum -t ${tar_name%.*} >> ${tar_name%.*} && mv ${tar_name%.*} ${tar_name} && cd ..
-  echo "${GREEN}***** Successfully made ${tar_name} *****${STD}";
+  echo "${BGREEN}***** Successfully made ${tar_name} *****${STD}";
   pause 'continue'
   [ -d "tmp" ] && rm -rf tmp
 }
 
 clean(){
-  echo "${GREEN}***** Cleaning in Progress *****${STD}";
+  echo "${BGREEN}***** Cleaning in Progress *****${STD}";
   [ -d "tmp" ] && rm -rf tmp
   [ -d "out" ] && rm -rf out
   rm -rf twrp/*
   rm -rf kernel/*
   rm -rf custom_vbmeta/*
-  echo "${GREEN}***** Cleaning Done *****${STD}";
+  echo "${BGREEN}***** Cleaning Done *****${STD}";
   pause 'continue'
 }
 
 # Show menu
 show_menus(){
   clear
-  echo "${ON_BLUE} J R K R U S E - A I O - B U I L D E R - Z Y G I S K v0.5 ${STD}"
+  echo "${ON_BLUE} JRKRUSE-AIO-BUILDER-ZYGISK menu $menu_version ${STD}"
   echo "1. Build ${UNDER_LINE}i${STD}mg"
   echo "2. Build ${UNDER_LINE}e${STD}xt4"
   echo "3. ${UNDER_LINE}C${STD}lean"
