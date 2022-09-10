@@ -89,8 +89,8 @@ fix_props() {
   ui_print " - Fixing Build Props..."
   for prop in `cat /tmp/build`;do
     export newprop=$(echo ${prop} | cut -d '=' -f1)
-    sed -i "/${newprop}/d" $ANDROID_ROOT/system/build.prop
-    echo $prop >> $ANDROID_ROOT/system/build.prop
+    sed -i "/${newprop}/d" /vendor/build.prop
+    echo $prop >> /vendor/build.prop
   done
 }
 
