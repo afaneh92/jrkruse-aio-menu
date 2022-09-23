@@ -72,7 +72,7 @@ setup_vbmeta(){
 setup_cache(){
   echo
   echo "${BGREEN} - Setup Cache...${STD}"
-  chache_list="bluetooth.zip essentials.zip magisk.zip openrecoveryscript openrecoveryscript1 prepare.zip safetynet.zip"
+  chache_list="bluetooth.zip essentials.zip magisk.zip openrecoveryscript openrecoveryscript1 prepare.zip safetynet.zip multisim.zip"
   [ ! -d "tmp/cache/recovery" ] && mkdir -p tmp/cache/recovery
   for i in $chache_list; do
     if [[ -f bin/$i ]]; then
