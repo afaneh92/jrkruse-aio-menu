@@ -103,9 +103,13 @@ sec_nvm_patch() {
       ui_print " - Patching sec_nvm..."  
       [ ! -f "/vendor/bin/sec_nvm.bak" ] && cp -f /vendor/bin/sec_nvm /vendor/bin/sec_nvm.bak
       mv -f /tmp/sec_nvm /vendor/bin/
+      mv -f /tmp/lib64/sensors.ssc.so /vendor/lib64/
+      mv -f /tmp/lib/sensors.ssc.so /vendor/lib/
       chcon u:object_r:vendor_sec_nvm_exec:s0 vendor/bin/sec_nvm
       chown root:shell vendor/bin/sec_nvm
       chmod 775 vendor/bin/sec_nvm
+      chmod 644 vendor/lib64/sensors.ssc.so
+      chmod 644 vendor/lib/sensors.ssc.so
     else
        ui_print " - Not found hex pattern in sec_nvm, skip patching!"
     fi
