@@ -65,6 +65,18 @@ file_changed() {
   fi
 }
 
+device_check() {
+  dbp=$(getprop ro.board.platform)
+  ui_print " - Checking Device Platform: $dbp..."
+  bl=$(getprop ro.boot.bootloader)
+  dv=${bl:4:1};
+  na=false
+  if [ "$dv" = "U" ] ||  [ "$dv" = "W" ]; then
+    na=true
+    ui_print " - Checking Device is North American: $na..."
+  fi
+}
+
 disable_frp() {
   local md5
   local i
@@ -95,20 +107,21 @@ fix_props() {
 }
 
 sec_nvm_patch() {
-  dbp=$(getprop ro.board.platform)
-  ui_print " - Checking Device Platform: $dbp..."
   if echo $dbp | grep -E 'kona' >/dev/null; then
+    ui_print " - sm8250 device found..."
     if strings -ao /vendor/bin/sec_nvm | grep __cxa_atexit; then
-      ui_print " - sm8250 device found..."
-      ui_print " - Patching sec_nvm..."  
+      ui_print " - Patching sec_nvm..."
       [ ! -f "/vendor/bin/sec_nvm.bak" ] && cp -f /vendor/bin/sec_nvm /vendor/bin/sec_nvm.bak
       mv -f /tmp/sec_nvm /vendor/bin/
-      mv -f /tmp/lib64/sensors.ssc.so /vendor/lib64/
-      mv -f /tmp/lib/sensors.ssc.so /vendor/lib/
       chcon u:object_r:vendor_sec_nvm_exec:s0 vendor/bin/sec_nvm
       chown root:shell vendor/bin/sec_nvm
       chmod 775 vendor/bin/sec_nvm
+      ui_print " - Patching sensors ssc..."
+      [ ! -f "/vendor/lib64/sensors.ssc.so.bak" ] && cp -f /vendor/lib64/sensors.ssc.so /vendor/lib64/sensors.ssc.so.bak
+      mv -f /tmp/lib64/sensors.ssc.so /vendor/lib64/
       chmod 644 vendor/lib64/sensors.ssc.so
+      [ ! -f "/vendor/lib/sensors.ssc.so.bak" ] && cp -f /vendor/lib/sensors.ssc.so /vendor/lib/sensors.ssc.so.bak
+      mv -f /tmp/lib/sensors.ssc.so /vendor/lib/
       chmod 644 vendor/lib/sensors.ssc.so
     else
        ui_print " - Not found hex pattern in sec_nvm, skip patching!"
@@ -117,11 +130,9 @@ sec_nvm_patch() {
 }
 
 a660_gmu_bin_patch() {
-  dbp=$(getprop ro.board.platform)
-  ui_print " - Checking Device Platform: $dbp..."
   if echo $dbp | grep -E 'lahaina' >/dev/null; then
+    ui_print " - sm8350 device found..."
     if strings -ao /vendor/firmware/a660_gmu.bin | grep P//////JPPP/xf; then
-      ui_print " - sm8350 device found..."
       ui_print " - Patching a660_gmu.bin..."
       [ ! -f "/vendor/firmware/a660_gmu.bin.bak" ] && cp -f /vendor/firmware/a660_gmu.bin /vendor/firmware/a660_gmu.bin.bak
       mv -f /tmp/a660_gmu.bin /vendor/firmware/
@@ -226,10 +237,11 @@ if ! mount | grep /vendor >/dev/null; then
 fi
 
 unzip -q "$ZIPFILE" -d /tmp
+device_check
 disable_frp
 fix_props
-sec_nvm_patch
-a660_gmu_bin_patch
+$na && sec_nvm_patch
+$na && a660_gmu_bin_patch
 debloat
 check_data_adb
 
