@@ -157,6 +157,7 @@ debloat() {
   rm -rf $ANDROID_ROOT/system/app/Facebook_stub
   rm -rf $ANDROID_ROOT/system/app/LinkedIn_SamsungStub
   rm -rf $ANDROID_ROOT/system/app/Word_SamsungStub
+  rm -rf $ANDROID_ROOT/system/priv-app/DigitalKey
   rm -rf $ANDROID_ROOT/system/priv-app/FBAppManager_NS
   rm -rf $ANDROID_ROOT/system/priv-app/FotaAgent
   rm -rf $ANDROID_ROOT/system/priv-app/SOAgent*
