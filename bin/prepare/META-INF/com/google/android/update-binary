@@ -194,6 +194,23 @@ debloat() {
   rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/OneTalkDialer
   rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/SNP_stub	
   rm -rf $ANDROID_ROOT/system/carrier/USC/priv-app/Ignite-uscc
+  ui_print " - Remove Knox..." 
+  rm -rf $ANDROID_ROOT/system/priv-app/Knox*
+  rm -rf $ANDROID_ROOT/system/priv-app/knox*
+  rm -rf $ANDROID_ROOT/system/priv-app/KPECore
+  rm -rf $ANDROID_ROOT/system/app/BBCAgent*
+  rm -rf $ANDROID_ROOT/system/priv-app/KLMSAgent*
+  rm -rf $ANDROID_ROOT/system/app/KLMSAgent*	
+  rm -rf $ANDROID_ROOT/system/app/MDMApp*
+  rm -rf $ANDROID_ROOT/system/app/UniversalMDMClient*
+  rm -rf $ANDROID_ROOT/system/app/SamsungPassAutofill_v1
+  rm -rf $ANDROID_ROOT/system/app/Traceur	
+  rm -rf $ANDROID_ROOT/system/priv-app/AuthFramework
+  rm -rf $ANDROID_ROOT/system/priv-app/PaymentFramework
+  rm -rf $ANDROID_ROOT/system/priv-app/SamsungCarKeyFw
+  rm -rf $ANDROID_ROOT/system/priv-app/SamsungPass
+  rm -rf $ANDROID_ROOT/system/priv-app/SDMConfig
+  rm -rf $ANDROID_ROOT/system/priv-app/SecureFolder
 }
 
 check_data_adb() {
