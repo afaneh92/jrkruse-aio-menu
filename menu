@@ -143,7 +143,7 @@ build(){
   compresslz4 $findimg
   echo
   read -p "Enter device model: " device_name
-  tar_name="USERDATA_AIO_${device_name}_ZYGISK_FORCE_WIPE_`date '+%Y_%m_%d'`.tar.md5"
+  tar_name="USERDATA_AIO_${device_name}_FORCE_WIPE_`date '+%Y_%m_%d'`.tar.md5"
   echo "Compressing tmp/* to out/${tar_name}"
   cd tmp && tar -H ustar -c `ls *.img *.img.ext4 *.img.lz4 *.img.ext4.lz4 2>/dev/null` > ../out/${tar_name%.*} && cd ..
   echo "Generate md5 hash"
@@ -167,7 +167,7 @@ clean(){
 # Show menu
 show_menus(){
   clear
-  echo "${ON_BLUE} JRKRUSE-AIO-BUILDER-ZYGISK menu $menu_version ${STD}"
+  echo "${ON_BLUE} JRKRUSE-AIO-BUILDER menu $menu_version ${STD}"
   echo "1. Build ${UNDER_LINE}i${STD}mg"
   echo "2. Build ${UNDER_LINE}e${STD}xt4"
   echo "3. ${UNDER_LINE}C${STD}lean"
