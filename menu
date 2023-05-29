@@ -90,13 +90,15 @@ setup_cache(){
 setup_kernel(){
   echo
   echo "${BGREEN} - Setup Kernel...${STD}"
-  if [[ -f kernel/kernel.zip ]]; then
-    echo "Copying kernel.zip to tmp/cache/recovery/kernel.zip"
-    cp kernel/kernel.zip tmp/cache/recovery/kernel.zip
+  findkernel=($(ls kernel/*.img kernel/*.zip 2>/dev/null | head -1))
+  [[ ! -z "$findkernel" ]] && x="$(basename -a $findkernel)"
+  if [[ ${x##*.} = img ]]; then
+    echo "Copying $x to tmp/boot.img"
+    cp kernel/$x tmp/boot.img
+  elif [[ ${x##*.} = zip ]]; then
+    echo "Copying $x to tmp/cache/recovery/kernel.zip"
+    cp kernel/$x tmp/cache/recovery/kernel.zip
     sed -i '1 a install /cache/recovery/kernel.zip' tmp/cache/recovery/openrecoveryscript1
-  elif [[ -f kernel/boot.img ]]; then
-    echo "Copying boot.img to tmp/boot.img"
-    cp kernel/boot.img tmp/boot.img
   else
     echo "No kernel selected"
   fi
