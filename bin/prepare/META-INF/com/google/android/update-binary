@@ -194,23 +194,37 @@ debloat() {
   rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/OneTalkDialer
   rm -rf $ANDROID_ROOT/system/carrier/VZW/priv-app/SNP_stub	
   rm -rf $ANDROID_ROOT/system/carrier/USC/priv-app/Ignite-uscc
-  ui_print " - Remove Knox..." 
-  rm -rf $ANDROID_ROOT/system/priv-app/Knox*
-  rm -rf $ANDROID_ROOT/system/priv-app/knox*
-  rm -rf $ANDROID_ROOT/system/priv-app/KPECore
+  ui_print " - Remove Knox..."
   rm -rf $ANDROID_ROOT/system/app/BBCAgent*
-  rm -rf $ANDROID_ROOT/system/priv-app/KLMSAgent*
-  rm -rf $ANDROID_ROOT/system/app/KLMSAgent*	
+  rm -rf $ANDROID_ROOT/system/app/Bridge*
+  rm -rf $ANDROID_ROOT/system/app/ContainerAgent*
+  rm -rf $ANDROID_ROOT/system/app/ContainerEventsRelayManager*
+  rm -rf $ANDROID_ROOT/system/app/kioskdefault*
+  rm -rf $ANDROID_ROOT/system/app/KLMSAgent*
+  rm -rf $ANDROID_ROOT/system/app/Knox*
+  rm -rf $ANDROID_ROOT/system/app/KNOX*
   rm -rf $ANDROID_ROOT/system/app/MDMApp*
+  rm -rf $ANDROID_ROOT/system/app/MyKNOX*
+  rm -rf $ANDROID_ROOT/system/app/RCPComponents*
+  rm -rf $ANDROID_ROOT/system/app/SamsungDLPService
+  rm -rf $ANDROID_ROOT/system/app/SecurityLogAgent*
+  rm -rf $ANDROID_ROOT/system/app/SecurityProviderSEC*
+  rm -rf $ANDROID_ROOT/system/app/SwitchKnoxI*
+  rm -rf $ANDROID_ROOT/system/app/SysScope*
   rm -rf $ANDROID_ROOT/system/app/UniversalMDMClient*
-  rm -rf $ANDROID_ROOT/system/app/SamsungPassAutofill_v1
-  rm -rf $ANDROID_ROOT/system/app/Traceur	
-  rm -rf $ANDROID_ROOT/system/priv-app/AuthFramework
-  rm -rf $ANDROID_ROOT/system/priv-app/PaymentFramework
-  rm -rf $ANDROID_ROOT/system/priv-app/SamsungCarKeyFw
-  rm -rf $ANDROID_ROOT/system/priv-app/SamsungPass
-  rm -rf $ANDROID_ROOT/system/priv-app/SDMConfig
-  rm -rf $ANDROID_ROOT/system/priv-app/SecureFolder
+  rm -rf $ANDROID_ROOT/system/container*
+  rm -rf $ANDROID_ROOT/system/etc/secure_storage/com.sec.knox*
+  rm -rf $ANDROID_ROOT/system/etc/permissions/knoxsdk_mdm.xml
+  rm -rf $ANDROID_ROOT/system/etc/permissions/knoxsdk_edm.xml
+  rm -rf $ANDROID_ROOT/system/preloadedkiosk*
+  rm -rf $ANDROID_ROOT/system/preloadedmdm*
+  rm -rf $ANDROID_ROOT/system/preloadedsso*
+  rm -rf $ANDROID_ROOT/system/priv-app/DiagMonAgent*
+  rm -rf $ANDROID_ROOT/system/priv-app/KLMSAgent*
+  rm -rf $(ls -d $ANDROID_ROOT/system/priv-app/Knox* | grep -v $ANDROID_ROOT/system/priv-app/KnoxGuard)
+  rm -rf $ANDROID_ROOT/system/priv-app/knox*
+  rm -rf $ANDROID_ROOT/system/priv-app/SecureFolderStub*
+  rm -rf $ANDROID_ROOT/system/priv-app/SPDClient*
 }
 
 check_data_adb() {
