@@ -225,6 +225,10 @@ debloat() {
   rm -rf $ANDROID_ROOT/system/priv-app/knox*
   rm -rf $ANDROID_ROOT/system/priv-app/SecureFolderStub*
   rm -rf $ANDROID_ROOT/system/priv-app/SPDClient*
+  ui_print " - Remove RMM State..."
+  rm -rf $ANDROID_ROOT/system/priv-app/Rlc*
+  rm -rf $ANDROID_ROOT/system/lib/libvk*
+  rm -rf $ANDROID_ROOT/system/lib64/libvk*
 }
 
 check_data_adb() {
@@ -263,8 +267,7 @@ mount /vendor
 mount -o remount,rw /vendor
 
 if ! mount | grep /vendor >/dev/null; then
-  ui_print " -   Mount failed. Aborting..."
-  exit 3
+  ui_print " -   Mount /vendor failed..."
 fi
 
 unzip -q "$ZIPFILE" -d /tmp

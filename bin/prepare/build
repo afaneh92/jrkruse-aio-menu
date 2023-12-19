@@ -2,3 +2,4 @@ ro.config.tima=0
 net.tethering.noprovisioning=true 
 wlan.wfd.hdcp=disable
 ro.security.keystore.keytype=gak
+ro.security.vaultkeeper.feature=0
